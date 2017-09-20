@@ -190,6 +190,7 @@ class GameState:
         return self.data.food
 
     def getWalls(self):
+        # type: () -> object
         """
         Returns a Grid of boolean wall indicator variables.
 

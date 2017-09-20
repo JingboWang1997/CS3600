@@ -90,53 +90,40 @@ def depthFirstSearch(problem):
     print "Is the start a goal?", problem.isGoalState(problem.getStartState())
     print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
-    # parents is a DICTIONARY storing the trace-back relationships
-    # explore is a STACK
-    # current is a tuple with the state (coordinate) and the action
-    # found indicates if the goal is found
     parents = {}
     visited = []
     explore = util.Stack()
     actions = []
     current = (problem.getStartState(), None)
     explore.push(current)
-    found = False
-    # keep looping until either
-    # the explore STACK is empty (goal is not reachable)
-    # the goal is found
-    while not explore.isEmpty() and not found:
+    while not explore.isEmpty() and not problem.isGoalState(current[0]):
         current = explore.pop()
-        # this WHILE checks if the node out of the stack is already visited
-        # if it is, ignore it and pop next
         while current[0] in visited:
             current = explore.pop()
-        visited.append(current[0])
-        neighbors = problem.getSuccessors(current[0])
-        # looping through the neighbors
-        for (state, action, cost) in neighbors:
-            if state not in visited:
-                neighbor = (state, action)
-                explore.push(neighbor)
-                parents[neighbor] = current
-                # if the goal is found, terminate early
-                if problem.isGoalState(state):
-                    current = explore.pop()
-                    found = True
-                    break
-    # if terminated on FOUND
-    if found:
-        # trace back and store the actions
-        # current actions are ordered reversely
+        if (not problem.isGoalState(current[0])):
+            visited.append(current[0])
+            neighbors = problem.getSuccessors(current[0])
+            for (state, action, cost) in neighbors:
+                if state not in visited:
+                    neighbor = (state, action)
+                    explore.push(neighbor)
+                    parents[neighbor] = current
+    if problem.isGoalState(current[0]):
         while (current[0] != problem.getStartState()):
             actions.append(current[1])
             current = parents[current]
-    # return a reversed list of actions
+
     return actions[::-1]
 
 def breadthFirstSearch(problem):
     """
     Search the shallowest nodes in the search tree first.
     """
+    # parents is a DICTIONARY storing the trace-back relationships
+    # explore is a Queue
+    # current is a tuple with the state (coordinate) and the action
+    # found indicates if the goal is found
+
     parents = {}
     visited = []
     explore = util.Queue()
@@ -147,19 +134,22 @@ def breadthFirstSearch(problem):
         current = explore.pop()
         while current[0] in visited:
             current = explore.pop()
-        visited.append(current[0])
-        neighbors = problem.getSuccessors(current[0])
-        for (state, action, cost) in neighbors:
-            if state not in visited:
-                neighbor = (state, action)
-                explore.push(neighbor)
-                parents[neighbor] = current
+        if (not problem.isGoalState(current[0])):
+            visited.append(current[0])
+            neighbors = problem.getSuccessors(current[0])
+            for (state, action, cost) in neighbors:
+                if state not in visited:
+                    neighbor = (state, action)
+                    explore.push(neighbor)
+                    parents[neighbor] = current
     if problem.isGoalState(current[0]):
         while (current[0] != problem.getStartState()):
             actions.append(current[1])
             current = parents[current]
 
     return actions[::-1]
+
+
 
 
 def uniformCostSearch(problem):
@@ -170,19 +160,20 @@ def uniformCostSearch(problem):
     visited = []
     explore = util.PriorityQueue()
     actions = []
-    current = (problem.getStartState(), None)
+    current = (problem.getStartState(), None, 0)
     explore.push(current, 0)
     while not explore.isEmpty() and not problem.isGoalState(current[0]):
         current = explore.pop()
         while current[0] in visited:
             current = explore.pop()
-        visited.append(current[0])
-        neighbors = problem.getSuccessors(current[0])
-        for (state, action, cost) in neighbors:
-            if state not in visited:
-                neighbor = (state, action)
-                explore.push(neighbor, cost)
-                parents[neighbor] = current
+        if not problem.isGoalState(current[0]):
+            visited.append(current[0])
+            neighbors = problem.getSuccessors(current[0])
+            for (state, action, cost) in neighbors:
+                if state not in visited:
+                    neighbor = (state, action, cost + current[2])
+                    explore.push((state, action, cost + current[2]), cost + current[2])
+                    parents[neighbor] = current
     if problem.isGoalState(current[0]):
         while (current[0] != problem.getStartState()):
             actions.append(current[1])
@@ -198,7 +189,6 @@ def nullHeuristic(state, problem=None):
     """
     return 0
 
-
 def aStarSearch(problem, heuristic=nullHeuristic):
     """
     Search the node that has the lowest combined cost and heuristic first.
@@ -207,19 +197,21 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     visited = []
     explore = util.PriorityQueue()
     actions = []
-    current = (problem.getStartState(), None)
-    explore.push(current, 0)
+    current = (problem.getStartState(), None, heuristic(problem.getStartState(), problem))
+    explore.push(current, heuristic(problem.getStartState(), problem))
     while not explore.isEmpty() and not problem.isGoalState(current[0]):
         current = explore.pop()
         while current[0] in visited:
             current = explore.pop()
-        visited.append(current[0])
-        neighbors = problem.getSuccessors(current[0])
-        for (state, action, cost) in neighbors:
-            if state not in visited:
-                neighbor = (state, action)
-                explore.push(neighbor, heuristic(state, problem))
-                parents[neighbor] = current
+        if not problem.isGoalState(current[0]):
+            visited.append(current[0])
+            neighbors = problem.getSuccessors(current[0])
+            for (state, action, cost) in neighbors:
+                if state not in visited:
+                    newH = heuristic(state, problem) + current[2] + cost - heuristic(current[0], problem)
+                    neighbor = (state, action, newH)
+                    explore.push((state, action, newH), newH)
+                    parents[neighbor] = current
     if problem.isGoalState(current[0]):
         while (current[0] != problem.getStartState()):
             actions.append(current[1])
