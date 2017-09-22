@@ -77,30 +77,19 @@ def tinyMazeSearch(problem):
 
 
 def depthFirstSearch(problem):
-    """
-    Search the deepest nodes in the search tree first
 
-    Your search algorithm needs to return a list of actions that reaches
-    the goal.  Make sure to implement a graph search algorithm
-
-    To get started, you might want to try some of these simple commands to
-    understand the search problem that is being passed in:
-
-    print "Start:", problem.getStartState()
-    print "Is the start a goal?", problem.isGoalState(problem.getStartState())
-    print "Start's successors:", problem.getSuccessors(problem.getStartState())
-    """
-    parents = {}
+    parents = {} #to help tracing back
     visited = []
     explore = util.Stack()
     actions = []
-    current = (problem.getStartState(), None)
+    current = (problem.getStartState(), None) #(position, action)
     explore.push(current)
+
     while not explore.isEmpty() and not problem.isGoalState(current[0]):
         current = explore.pop()
-        while current[0] in visited:
+        while current[0] in visited: #if the popped is visited, skip it
             current = explore.pop()
-        if (not problem.isGoalState(current[0])):
+        if (not problem.isGoalState(current[0])): #to prevent expanding on the goal
             visited.append(current[0])
             neighbors = problem.getSuccessors(current[0])
             for (state, action, cost) in neighbors:
@@ -108,33 +97,28 @@ def depthFirstSearch(problem):
                     neighbor = (state, action)
                     explore.push(neighbor)
                     parents[neighbor] = current
+
     if problem.isGoalState(current[0]):
-        while (current[0] != problem.getStartState()):
+        while (current[0] != problem.getStartState()): #trace back
             actions.append(current[1])
             current = parents[current]
 
-    return actions[::-1]
+    return actions[::-1] #return the actions in the right order
 
 def breadthFirstSearch(problem):
-    """
-    Search the shallowest nodes in the search tree first.
-    """
-    # parents is a DICTIONARY storing the trace-back relationships
-    # explore is a Queue
-    # current is a tuple with the state (coordinate) and the action
-    # found indicates if the goal is found
 
-    parents = {}
+    parents = {} #to help tracing back
     visited = []
     explore = util.Queue()
     actions = []
-    current = (problem.getStartState(), None)
+    current = (problem.getStartState(), None) #(position, action)
     explore.push(current)
+
     while not explore.isEmpty() and not problem.isGoalState(current[0]):
         current = explore.pop()
-        while current[0] in visited:
+        while current[0] in visited: #if the popped is visited, skip it
             current = explore.pop()
-        if (not problem.isGoalState(current[0])):
+        if (not problem.isGoalState(current[0])): #to prevent expanding on the goal
             visited.append(current[0])
             neighbors = problem.getSuccessors(current[0])
             for (state, action, cost) in neighbors:
@@ -142,31 +126,28 @@ def breadthFirstSearch(problem):
                     neighbor = (state, action)
                     explore.push(neighbor)
                     parents[neighbor] = current
+
     if problem.isGoalState(current[0]):
-        while (current[0] != problem.getStartState()):
+        while (current[0] != problem.getStartState()): #trace back
             actions.append(current[1])
             current = parents[current]
 
-    return actions[::-1]
-
-
-
+    return actions[::-1] #return the actions in the right order
 
 def uniformCostSearch(problem):
-    """
-    Search the node of least total cost first.
-    """
-    parents = {}
+
+    parents = {} #to help tracing back
     visited = []
     explore = util.PriorityQueue()
     actions = []
-    current = (problem.getStartState(), None, 0)
+    current = (problem.getStartState(), None, 0) #(state, action, cost)
+
     explore.push(current, 0)
     while not explore.isEmpty() and not problem.isGoalState(current[0]):
         current = explore.pop()
-        while current[0] in visited:
+        while current[0] in visited: #if the popped is visited, skip it
             current = explore.pop()
-        if not problem.isGoalState(current[0]):
+        if not problem.isGoalState(current[0]): #to prevent expanding on the goal
             visited.append(current[0])
             neighbors = problem.getSuccessors(current[0])
             for (state, action, cost) in neighbors:
@@ -174,13 +155,13 @@ def uniformCostSearch(problem):
                     neighbor = (state, action, cost + current[2])
                     explore.push((state, action, cost + current[2]), cost + current[2])
                     parents[neighbor] = current
+
     if problem.isGoalState(current[0]):
-        while (current[0] != problem.getStartState()):
+        while (current[0] != problem.getStartState()): #trace back
             actions.append(current[1])
             current = parents[current]
 
-    return actions[::-1]
-
+    return actions[::-1] #return the actions in the right order
 
 def nullHeuristic(state, problem=None):
     """
@@ -193,31 +174,34 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     """
     Search the node that has the lowest combined cost and heuristic first.
     """
-    parents = {}
+    parents = {} #to help tracing back
     visited = []
     explore = util.PriorityQueue()
     actions = []
-    current = (problem.getStartState(), None, heuristic(problem.getStartState(), problem))
+    current = (problem.getStartState(), None, heuristic(problem.getStartState(), problem)) #(state, action, heuristic)
     explore.push(current, heuristic(problem.getStartState(), problem))
+
     while not explore.isEmpty() and not problem.isGoalState(current[0]):
         current = explore.pop()
-        while current[0] in visited:
+        while current[0] in visited: #if the popped is visited, skip it
             current = explore.pop()
-        if not problem.isGoalState(current[0]):
+        if not problem.isGoalState(current[0]): #to prevent expanding on the goal
             visited.append(current[0])
             neighbors = problem.getSuccessors(current[0])
             for (state, action, cost) in neighbors:
                 if state not in visited:
                     newH = heuristic(state, problem) + current[2] + cost - heuristic(current[0], problem)
+                    #heuristic of new state + stored heuristic in current + cost of path - heuristic of the previous state
                     neighbor = (state, action, newH)
                     explore.push((state, action, newH), newH)
                     parents[neighbor] = current
+
     if problem.isGoalState(current[0]):
-        while (current[0] != problem.getStartState()):
+        while (current[0] != problem.getStartState()): #trace back
             actions.append(current[1])
             current = parents[current]
 
-    return actions[::-1]
+    return actions[::-1] #return the actions in the right order
 
 
 # Abbreviations

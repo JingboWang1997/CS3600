@@ -315,7 +315,7 @@ class CornersProblem(search.SearchProblem):
     def getStartState(self):
         "Returns the start state (in your state space, not the full Pacman state space)"
         cornerStates = False,False,False,False
-        startState = (self.startingPosition, cornerStates)
+        startState = (self.startingPosition, cornerStates) #(position, visitStatus)
         return startState
 
     def isGoalState(self, state):
@@ -347,7 +347,7 @@ class CornersProblem(search.SearchProblem):
             nextx, nexty = int(x + dx), int(y + dy)
             hitsWall = self.walls[nextx][nexty]
             if not hitsWall:
-                if (nextx, nexty) in self.corners:
+                if (nextx, nexty) in self.corners: #if at corner, change visitStatus in state
                     if (nextx, nexty) == self.corners[0]:
                         visit = True, cornerStates[1], cornerStates[2], cornerStates[3]
                     elif (nextx, nexty) == self.corners[1]:
@@ -421,6 +421,7 @@ def cornersHeuristic(state, problem):
         if not visited:
             if dist == 0 or dist < abs(location[0] - corner[0]) + abs(location[1] - corner[1]):
                 dist = abs(location[0] - corner[0]) + abs(location[1] - corner[1])
+    #find the farthest corner and return the distance
     return dist
 
 
@@ -537,13 +538,15 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     walls = problem.walls
+    foodList = foodGrid.asList()
 
     dist = 0
     current = position
-    for food in foodGrid.asList():
+    for food in foodList:
         if dist > 0:
             dist -= 1
         if (current[0] == food[0]):
+            #if there is a wall in between the path add 2 to the expected length
             if (food[1] < current[1]):
                 for i in range(food[1], current[1]):
                     if walls[current[0]][i]:
@@ -563,7 +566,8 @@ def foodHeuristic(state, problem):
                         dist += 2
 
         dist += abs(current[0] - food[0]) + abs(current[1] - food[1])
-        current = food
+        #add up all the distance between food dots
+        current = food #moving to the next food
     return dist
 
 class ClosestDotSearchAgent(SearchAgent):
@@ -587,17 +591,36 @@ class ClosestDotSearchAgent(SearchAgent):
         print 'Path found with cost %d.' % len(self.actions)
 
     def findPathToClosestDot(self, gameState):
-        """
-        Returns a path (a list of actions) to the closest dot, starting from gameState.
-        """
-        # Here are some useful elements of the startState
+        #a short bfs to find the closest food
         startPosition = gameState.getPacmanPosition()
-        food = gameState.getFood()
-        walls = gameState.getWalls()
         problem = AnyFoodSearchProblem(gameState)
 
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        parents = {}
+        visited = []
+        explore = util.Queue()
+        actions = []
+        current = (startPosition, None)
+        explore.push(current)
+        while not explore.isEmpty() and not problem.isGoalState(current[0]):
+            current = explore.pop()
+            while current[0] in visited:
+                current = explore.pop()
+            if (not problem.isGoalState(current[0])):
+                visited.append(current[0])
+                neighbors = problem.getSuccessors(current[0])
+                for (state, action, cost) in neighbors:
+                    if state not in visited:
+                        neighbor = (state, action)
+                        explore.push(neighbor)
+                        parents[neighbor] = current
+        if problem.isGoalState(current[0]):
+            while (current[0] != problem.getStartState()):
+                actions.append(current[1])
+                current = parents[current]
+
+        return actions[::-1]
+
+
 
 
 class AnyFoodSearchProblem(PositionSearchProblem):
@@ -632,10 +655,7 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         that will complete the problem definition.
         """
         x, y = state
-
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
-
+        return self.food[x][y]
 
 ##################
 # Mini-contest 1 #
@@ -660,7 +680,6 @@ class ApproximateSearchAgent(Agent):
         """
         "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
-
 
 def mazeDistance(point1, point2, gameState):
     """
