@@ -43,8 +43,28 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.iterations = iterations
         self.values = util.Counter() # A Counter is a dict with default 0
 
-        # Write value iteration code here
-        "*** YOUR CODE HERE ***"
+        # Ui+1(s) = R(s)+y * maxaction_a[SUM(T(s,a,s') * Ui(s'))]
+
+        for i in range(0, iterations):
+            nextValues = util.Counter()  # temporary dto store values
+            states = mdp.getStates()  # all states needed to be updates
+            for state in states:
+                reward = mdp.getReward(state, None, None)
+                if mdp.isTerminal(state):
+                    nextValues[state] = reward
+                else:
+                    actions = mdp.getPossibleActions(state)
+                    bestActionValue = float("-inf")
+                    for action in actions:
+                        possibles = mdp.getTransitionStatesAndProbs(state, action)
+                        sum = 0
+                        for nextState, prob in possibles:
+                            sum += (prob * self.values[nextState])
+                        bestActionValue = max(bestActionValue, sum)
+                    nextValues[state] = reward + (discount * bestActionValue)
+            self.values = nextValues
+
+
 
 
     def getValue(self, state):
@@ -59,8 +79,22 @@ class ValueIterationAgent(ValueEstimationAgent):
           Compute the Q-value of action in state from the
           value function stored in self.values.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # Ui+1(s) = R(s)+y * maxaction_a[SUM(T(s,a,s') * Ui(s'))]
+        # Q-value = R(s)+y * SUM(T(s,a,s') * Ui(s'))
+
+        if self.mdp.isTerminal(state): # if terminal, return illegal
+            return self.mdp.getReward(state, None, None)
+
+        reward = self.mdp.getReward(state, None, None)
+        y = self.discount
+        possibles = self.mdp.getTransitionStatesAndProbs(state, action)
+
+        sum = 0
+        for nextState, prob in possibles:
+            sum += (prob * self.values[nextState])
+        return reward + (y * sum)
+
+
 
     def computeActionFromValues(self, state):
         """
@@ -71,8 +105,27 @@ class ValueIterationAgent(ValueEstimationAgent):
           there are no legal actions, which is the case at the
           terminal state, you should return None.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # Ui+1(s) = R(s)+y * maxaction_a[SUM(T(s,a,s') * Ui(s'))]
+        # pi* = maxaction_a[SUM(T(s,a,s') * Ui(s'))]
+
+        if self.mdp.isTerminal(state): # if terminal, return illegal
+            return None
+        actions = self.mdp.getPossibleActions(state)
+
+        bestAction = None
+        maxValue = float("-inf")
+
+        for action in actions:
+            possibles = self.mdp.getTransitionStatesAndProbs(state, action)
+            sum = 0
+            for nextState, prob in possibles:
+                sum += (prob * self.values[nextState])
+            if (sum > maxValue):
+                maxValue = sum
+                bestAction = action
+        return bestAction
+
+
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
